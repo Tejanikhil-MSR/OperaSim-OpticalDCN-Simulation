@@ -389,45 +389,45 @@ void PriorityQueue::completeService() {
 	            // RLB only applies to packets between racks.
                 // for RLB, we actually set `slice_sent` when it's committed by the RLB module, not when it's sent by the NIC
 
-                pkt->set_src_ToR(_top->get_firstToR(pkt->get_src())); // set the sending ToR. This is used for subsequent routing
+                // pkt->set_src_ToR(_top->get_firstToR(pkt->get_src())); // set the sending ToR. This is used for subsequent routing
 
-	            // send on the first path (index 0) to the "intermediate" destination
-	            int path_index = 0; // index 0 ensures it's the direct path
-	            pkt->set_path_index(path_index); // set which path the packet will take
+	            // // send on the first path (index 0) to the "intermediate" destination
+	            // int path_index = 0; // index 0 ensures it's the direct path
+	            // pkt->set_path_index(path_index); // set which path the packet will take
 
-	            // set some initial packet parameters used for routing
-	            pkt->set_lasthop(false);
-	            pkt->set_crthop(-1);
-	            pkt->set_crtToR(-1);
-
-
-                // debug:
-                //if (timeAsMs(eventlist().now()) > 385.4899 && pkt->get_src_ToR() == 77) {
-                /*if (pkt->get_time_sent() == 342944606400 && pkt->get_real_src() == 177 && pkt->get_real_dst() == 423) {
-                    cout << "debug @ queue.cpp:" << endl;
-                    cout << " _node = " << _node << endl;
-                    cout << " pkt->get_src_ToR() = " << pkt->get_src_ToR() << endl;
-                    cout << " _top->get_firstToR(pkt->get_dst()) = " << _top->get_firstToR(pkt->get_dst()) << endl;
-                    cout << " pkt->get_slice_sent() = " << pkt->get_slice_sent() << endl;
-                    cout << " path_index = " << path_index << endl;
-                    cout << " time = " << timeAsUs(eventlist().now()) << " us" << endl;
-                    cout << " pkt->get_src() = " << pkt->get_src() << endl;
-                    cout << " pkt->get_dst() = " << pkt->get_dst() << endl;
-                    cout << " pkt->get_real_src() = " << pkt->get_real_src() << endl;
-                    cout << " pkt->get_real_dst() = " << pkt->get_real_dst() << endl;
-                    cout << " pkt sent at " << pkt->get_time_sent() << " ps" << endl;
-                }*/
-
-                // debug:
-                //if (_node == 177 && pkt->get_real_dst() == 423 && eventlist().now() <= 342944606400)
-                //    pkt->set_time_sent(eventlist().now());
-
-                //if (pkt->get_time_sent() == 342944606400 && pkt->get_real_src() == 177 && pkt->get_real_dst() == 423)
-                //    cout << "debug @queue: _node " << _node << " sending the packet to node " << pkt->get_dst() << " in slice " << pkt->get_slice_sent() << endl;
+	            // // set some initial packet parameters used for routing
+	            // pkt->set_lasthop(false);
+	            // pkt->set_crthop(-1);
+	            // pkt->set_crtToR(-1);
                 
-	            pkt->set_maxhops(_top->get_no_hops(pkt->get_src_ToR(),
-	                _top->get_firstToR(pkt->get_dst()), pkt->get_slice_sent(), path_index));
-	        }
+	            // pkt->set_maxhops(_top->get_no_hops(pkt->get_src_ToR(),
+	            //     _top->get_firstToR(pkt->get_dst()), pkt->get_slice_sent(), path_index));
+                
+                // * newly added - older one commented from 392 - 404
+                pkt->set_src_ToR(_top->get_firstToR(pkt->get_src()));
+                int path_index = 0;
+                pkt->set_path_index(path_index);
+                pkt->set_lasthop(false);
+                pkt->set_crthop(-1);
+                pkt->set_crtToR(-1);
+
+                int srcToR = pkt->get_src_ToR();
+                int dstToR = _top->get_firstToR(pkt->get_dst());
+                if (srcToR != dstToR) {
+                    int slice  = pkt->get_slice_sent();   // already set by RlbModule
+                    int nhops  = _top->get_no_hops(srcToR, dstToR, slice, path_index);
+                    vector<int> src_route;
+                    src_route.reserve(nhops);
+                    for (int h = 0; h < nhops; h++) {
+                        src_route.push_back(_top->get_port(srcToR, dstToR, slice, path_index, h));
+                    }
+                    pkt->set_src_route(src_route);   // embed full path in packet
+                    pkt->set_maxhops(nhops);
+                } else {
+                    pkt->set_maxhops(0);             // same-rack: no uplink hops
+                }
+
+            }
 
 	        // debug:
 	        //cout << "NIC[node" << _node << "] - sending an RLB packet to dst_host = " << pkt->get_dst() << endl;

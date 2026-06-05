@@ -122,16 +122,6 @@ void RlbModule::receivePacket(Packet& pkt, int flag)
         // if it's from the network, we either need to enqueue or send to Rlb sink
         if (pkt.get_dst() == _node) {
             if (pkt.get_real_dst() == _node) {
-
-                // debug:
-                //cout << "RLBmodule[node" << _node << "] - received a packet to sink at " << timeAsUs(eventlist().now()) << " us" << endl;
-
-                // debug:
-                //if (pkt.get_time_sent() == 342944606400 && pkt.get_real_src() == 177 && pkt.get_real_dst() == 423) {
-                //    cout << ">>> node " << _node << " received the packet!" << endl;
-                //    abort();
-                //}
-
                 RlbSink* sink = pkt.get_rlbsink();
                 assert(sink);
                 sink->receivePacket(pkt); // should this be pkt, *pkt, or &pkt ??? !!!

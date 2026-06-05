@@ -219,7 +219,6 @@ void DynExpTopology::init_network() {
   }
 }
 
-
 int DynExpTopology::get_nextToR(int slice, int crtToR, int crtport) {
   int uplink = crtport - _ndl + crtToR*_nul;
   //cout << "Getting next ToR..." << endl;

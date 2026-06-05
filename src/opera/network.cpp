@@ -17,6 +17,7 @@ void Packet::set_attrs(PacketFlow& flow, int pkt_size, packetid_t id, int src, i
     //_nexthop = 0;
     _is_header = 0;
     _flags = 0;
+    _src_route.clear(); // * newly added
 }
 
 /* these were causing cyclic dependencies, moved them into NDPSrc/NDPSink, Queue, and Pipe classes

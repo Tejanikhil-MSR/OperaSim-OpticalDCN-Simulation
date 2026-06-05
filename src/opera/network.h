@@ -172,6 +172,12 @@ class Packet {
     uint64_t get_time_sent() {return _time_sent;}
     uint64_t _time_sent;
 
+    // * newly added functions (3) for source routing
+    void set_src_route(const vector<int>& route) { _src_route = route; }
+    const vector<int>& get_src_route() const { return _src_route; }
+    void clear_src_route() { _src_route.clear(); }
+
+
 
  protected:
     void set_attrs(PacketFlow& flow, int pkt_size, packetid_t id, int src, int dst);
@@ -211,6 +217,8 @@ class Packet {
     bool _lasthop;
     int _maxhops;
     int _crtport;
+    // * newly added
+    vector<int> _src_route; // [port_hop0, port_hop1, ...] computed at source
 
     packetid_t _id;
     PacketFlow* _flow;

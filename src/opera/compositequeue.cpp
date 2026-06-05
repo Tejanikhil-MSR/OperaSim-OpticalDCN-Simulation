@@ -216,33 +216,9 @@ void CompositeQueue::doNextEvent() {
 
 void CompositeQueue::receivePacket(Packet& pkt) {
 
-	// debug:
-	//if (pkt.get_time_sent() == 342944606400 && pkt.get_real_src() == 177 && pkt.get_real_dst() == 423)
-	//	cout << "debug @compositequeue: ToR " << _tor << ", port " << _port << " received the packet" << endl;
-
-	// debug:
-	//cout << "_maxsize = " << _maxsize << endl;
-
-    //pkt.flow().logTraffic(pkt,*this,TrafficLogger::PKT_ARRIVE);
-
-    // debug:
-	//if (pkt.been_bounced() == true && pkt.bounced() == false) {
-	//	cout << "ToR " << _tor << " received a previously bounced packet" << endl;
-	//	cout << "    src = " << pkt.get_src() << endl;
-	//} else if (pkt.bounced() == true) {
-	//	cout << "ToR " << _tor << " received a currently bounced packet" << endl;
-	//	cout << "    src = " << pkt.get_src() << endl;
-	//}
-
 	switch (pkt.type()) {
     case RLB:
     {
-        
-    	// debug:
-    	//RlbPacket *p = (RlbPacket*)(&pkt);
-        //    if (p->seqno() == 1)
-        //        cout << "# marked packet queued at ToR: " << _tor << ", port: " << _port << endl;
-
     	_enqueued_rlb.push_front(&pkt);
 		_queuesize_rlb += pkt.size();
 

@@ -140,9 +140,6 @@ void Pipe::sendFromPipe(Packet *pkt) {
                 pkt->set_crtToR(pkt->get_src_ToR());
 
             else {
-                // this was assuming the topology didn't change:
-                //pkt->set_crtToR(top->get_nextToR(pkt->get_slice_sent(), pkt->get_crtToR(), pkt->get_crtport()));
-
                 // under a changing topology, we have to use the current slice:
                 // we compute the current slice at the end of the packet transmission
                 // !!! as a future optimization, we could have the "wrong" host NACK any packets
@@ -219,26 +216,30 @@ void Pipe::sendFromPipe(Packet *pkt) {
                     return;
                 }
             }
+
             //cout << "Pipe: the packet is delivered at " << timeAsUs(eventlist().now()) << " us" << endl;
             //cout << "   The curret slice is " << currentslice << endl; 
             //cout << "   Upcoming ToR is " << pkt->get_crtToR() << endl;
 
             pkt->inc_crthop(); // increment the hop
 
-            // debug:
-            //RlbPacket *p = (RlbPacket*)(pkt);
-            //if (p->seqno() == 1) {
-            //    cout << "Pipe: current hop = " << pkt->get_crthop() << ", max hops = " << pkt->get_maxhops() << endl;
-            //}
-
-            // get the port:
             if (pkt->get_crthop() == pkt->get_maxhops()) { // no more hops defined, need to set downlink port
                 pkt->set_crtport(top->get_lastport(pkt->get_dst()));
                 //cout << "   Upcoming (last) port = " << pkt->get_crtport() << endl;
                 
             } else {
-                pkt->set_crtport(top->get_port(pkt->get_src_ToR(), top->get_firstToR(pkt->get_dst()),
-                    pkt->get_slice_sent(), pkt->get_path_index(), pkt->get_crthop()));
+                // pkt->set_crtport(top->get_port(pkt->get_src_ToR(), top->get_firstToR(pkt->get_dst()),
+                //     pkt->get_slice_sent(), pkt->get_path_index(), pkt->get_crthop()));
+                if (pkt->type() == RLB && !pkt->get_src_route().empty()) {
+                    // Source-routed RLB: read the pre-computed port directly
+                    pkt->set_crtport(pkt->get_src_route()[pkt->get_crthop()]);
+                
+                } else {
+                    pkt->set_crtport(top->get_port(pkt->get_src_ToR(), top->get_firstToR(pkt->get_dst()),
+                        pkt->get_slice_sent(), pkt->get_path_index(), pkt->get_crthop()));
+
+                }
+
                 //cout << "   Upcoming port = " << pkt->get_crtport() << endl;
 
                 // debug:
